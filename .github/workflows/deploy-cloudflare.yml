@@ -37,16 +37,17 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Deploy Worker and runtime secrets
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: film-by-hand-github-ready-2026-08-15
-          command: deploy --config dist/server/wrangler.json
-          secrets: |
-            SUPABASE_URL
-            SUPABASE_PUBLISHABLE_KEY
+      - name: Prepare runtime secrets
+        shell: bash
+        run: |
+          umask 077
+          printf 'SUPABASE_URL=%s\nSUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_PUBLISHABLE_KEY" > .runtime-secrets.env
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+
+      - name: Deploy Worker
+        run: pnpm exec wrangler deploy --config dist/server/wrangler.json --secrets-file .runtime-secrets.env
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
