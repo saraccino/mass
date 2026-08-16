@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   if (!configured()) return Response.json({ error: "Survey database is not configured." }, { status: 503, headers: corslessHeaders });
   try {
     const answers = await request.json() as Answers;
-    if (!answers || !answers.name?.trim() || !answers.country || !answers.city?.trim() || !answers.ageRange || !answers.photographyRelationship || !answers.equipment || !answers.frustration || !answers.workspaceSize) return Response.json({ error: "Incomplete response." }, { status: 400, headers: corslessHeaders });
+    if (!answers || !answers.ageRange || !answers.photographyRelationship || !answers.equipment || !answers.frustration || !answers.workspaceSize) return Response.json({ error: "Incomplete response." }, { status: 400, headers: corslessHeaders });
     const id = crypto.randomUUID();
     const response = await fetch(`${env().url}/rest/v1/survey_responses`, { method: "POST", headers: { ...supabaseHeaders(), Prefer: "return=minimal" }, body: JSON.stringify({ id, answers, survey_version: 1 }) });
     if (!response.ok) throw new Error(await response.text());
@@ -56,3 +56,4 @@ export async function GET(request: Request) {
   const body = excel ? asExcel(rows) : asCsv(rows);
   return new Response(body, { headers: { "Content-Type": excel ? "application/vnd.ms-excel; charset=utf-8" : "text/csv; charset=utf-8", "Content-Disposition": `attachment; filename="35mm-survey-responses.${excel ? "xls" : "csv"}"`, "Cache-Control": "no-store" } });
 }
+
